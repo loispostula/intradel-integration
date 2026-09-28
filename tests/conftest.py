@@ -29,7 +29,7 @@ def bypass_clientsession() -> Generator[None]:
     """
     with (
         patch("custom_components.intradel.coordinator.async_create_clientsession"),
-        patch("custom_components.intradel.config_flow.async_get_clientsession"),
+        patch("custom_components.intradel.config_flow.async_create_clientsession"),
     ):
         yield
 

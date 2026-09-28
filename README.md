@@ -16,8 +16,11 @@ by an invisible reCAPTCHA that the site verifies server-side, so a plain usernam
 request is always rejected (`La vérification anti-spam a échoué`) — that method is therefore
 not offered. Log in once in a regular browser and paste the resulting session cookie.
 
-Capturing the cookie by hand should rarely be needed again afterwards: the integration pings
-the site regularly so the session never goes stale.
+The integration pings the site regularly to reduce session inactivity. Intradel can
+still expire or reject a session; keep-alive cannot recover an invalid cookie.
+
+Cookie validation uses a separate HTTP session so a cached cookie cannot override
+the cookie entered in the configuration form.
 
 ### How to get the session cookie
 

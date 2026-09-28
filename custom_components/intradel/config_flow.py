@@ -17,7 +17,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from pyintradel.api import get_data
 
 from .const import (
@@ -37,14 +37,18 @@ INTRADEL_URL = "https://www.intradel.be/particulier/"
 
 async def validate_authentication(hass: HomeAssistant, cookie: str) -> None:
     """Ensure the provided session cookie is working."""
-    # One-shot validation: the shared HA session is the documented tool here; the
-    # actual polling uses the coordinator's own isolated session.
+    # aiohttp's cookie jar overrides a raw Cookie header. A shared session can
+    # therefore validate a cached cookie instead of the one we are about to save.
+    session = async_create_clientsession(hass, auto_cleanup=False)
     try:
-        if not await get_data(async_get_clientsession(hass), cookie=cookie):
+        if not await get_data(session, cookie=cookie):
             raise InvalidAuth
     except ValueError as err:
-        _LOGGER.error("Unable to authenticate: %s", err)
+        # The parser includes the response HTML in its exception arguments.
+        _LOGGER.debug("Intradel rejected the supplied session cookie")
         raise InvalidAuth from err
+    finally:
+        session.detach()
 
 
 class IntradelConfigFlow(ConfigFlow, domain=DOMAIN):
